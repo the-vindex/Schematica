@@ -70,3 +70,7 @@ In order to get the most up-to-date builds, you'll have to periodically update y
 4. Execute `git pull master`. This pulls all commits from the official repository that do not yet exist on your local repository and updates it.
 
 Shamelessly based this README off [pahimar's version](https://github.com/pahimar/Equivalent-Exchange-3).
+
+## Origin
+
+Fork of Lunatrius/Schematica (MIT) for the Overseer project: Cleanroom build, Dank/Null-aware printer, safety pause

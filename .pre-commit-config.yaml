@@ -1,0 +1,23 @@
+repos:
+  # repo-baseline:pre-commit-begin version=1
+  - repo: local
+    hooks:
+      - id: repo-baseline-gitleaks
+        name: gitleaks (staged secret scan)
+        entry: .repo-baseline/run-gitleaks git --pre-commit --redact=100 --staged --no-banner
+        language: system
+        pass_filenames: false
+        always_run: true
+      - id: repo-baseline-config-version
+        name: repo-baseline config version
+        entry: .repo-baseline/check-config-version
+        language: script
+        pass_filenames: false
+        always_run: true
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: detect-private-key
+      - id: check-added-large-files
+        args: [--maxkb=10000]
+  # repo-baseline:pre-commit-end

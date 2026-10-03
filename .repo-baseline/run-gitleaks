@@ -1,0 +1,133 @@
+#!/usr/bin/env bash
+# Managed by repo-baseline; baseline-version: 1
+#
+# Runs gitleaks, native first, with the official container as a fallback.
+#
+# The version requirement is a FLOOR, not a pin. Newer gitleaks means more
+# detectors, and for a secret scanner that is strictly better: a spurious block
+# is recoverable, a missed secret is not. But a build BELOW the floor is unsafe
+# in a way that is easy to miss — gitleaks treats `minVersion` as advisory, so an
+# old binary warns, ignores rules it does not understand, and still exits 0
+# "no leaks found". That false-clean is what this check exists to prevent.
+#
+# The floor has exactly one home: `minVersion` in the canonical .gitleaks.toml.
+set -euo pipefail
+
+# Known-good container snapshot, used only when no native binary is present.
+# Pinned by digest for supply-chain reasons (`:latest` silently moving under us
+# was a real bug). Raising the floor above this version needs a newer digest.
+GITLEAKS_FALLBACK_VERSION="8.30.1"
+GITLEAKS_IMAGE="ghcr.io/gitleaks/gitleaks@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f"
+
+# Resolve the floor from the config this invocation will actually use, so a
+# pre-adoption scan against the skill's canonical ruleset works in a repo that
+# has no .gitleaks.toml yet.
+config="${REPO_BASELINE_CONFIG:-}"
+if [[ -z "$config" || ! -r "$config" ]]; then
+  config=""
+  for arg in "$@"; do
+    case "$arg" in
+      --config=*) config="${arg#--config=}" ;;
+    esac
+  done
+fi
+[[ -n "$config" && -r "$config" ]] || config=".gitleaks.toml"
+if [[ ! -r "$config" ]]; then
+  config="${REPO_BASELINE_SKILL_DIR:-$HOME/.claude/skills/repo-baseline}/assets/gitleaks.toml"
+fi
+
+floor=""
+if [[ -r "$config" ]]; then
+  floor="$(sed -n 's/^minVersion *= *"v\?\([0-9][0-9.]*\)".*/\1/p' "$config" | head -n 1)"
+fi
+if [[ -z "$floor" ]]; then
+  printf '%s\n' "repo-baseline: no minVersion floor found in ${config}" >&2
+  exit 78
+fi
+
+# The ruleset gitleaks itself is told to load. If the caller named one
+# explicitly it MUST be readable here: gitleaks exits 1 when it cannot load a
+# config, and 1 is also "leaks found". Letting that through makes a scan that
+# never ran indistinguishable from a real finding — the caller reports a
+# phantom leak on a clean repo, and a genuinely dirty repo reports the same
+# way for the wrong reason. 78 is this script's existing "runtime unusable".
+arg_config=""
+for arg in "$@"; do
+  case "$arg" in
+    --config=*) arg_config="${arg#--config=}" ;;
+  esac
+done
+if [[ -n "$arg_config" && ! -r "$arg_config" ]]; then
+  printf '%s\n' "repo-baseline: gitleaks config is not readable: ${arg_config}" >&2
+  exit 78
+fi
+
+# at_least <have> <want> — true when have >= want.
+at_least() {
+  [[ "$(printf '%s\n%s\n' "$2" "$1" | sort -V | head -n 1)" == "$2" ]]
+}
+
+if command -v gitleaks >/dev/null 2>&1; then
+  actual="$(gitleaks version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -n 1 || true)"
+  if [[ -z "$actual" ]]; then
+    printf '%s\n' "repo-baseline: cannot determine the version of the gitleaks on PATH" >&2
+    exit 78
+  fi
+  if ! at_least "$actual" "$floor"; then
+    printf '%s\n' \
+      "repo-baseline: gitleaks ${actual} is below the required floor ${floor}" \
+      "  install a current build:  bash machine-setup-*/scripts/11-gitleaks.sh" >&2
+    exit 78
+  fi
+  exec gitleaks "$@"
+fi
+
+if [[ "${REPO_BASELINE_DISABLE_DOCKER:-0}" != "1" ]] \
+  && command -v docker >/dev/null 2>&1 \
+  && docker info >/dev/null 2>&1; then
+  if ! at_least "$GITLEAKS_FALLBACK_VERSION" "$floor"; then
+    printf '%s\n' \
+      "repo-baseline: pinned container ${GITLEAKS_FALLBACK_VERSION} is below floor ${floor}" \
+      "  install a native binary, or move GITLEAKS_IMAGE to a newer digest" >&2
+    exit 78
+  fi
+  root="$(git rev-parse --show-toplevel)"
+  git_dir="$(git rev-parse --git-dir)"
+  if [[ "$git_dir" != .git ]]; then
+    printf '%s\n' "repo-baseline: native gitleaks is required for linked worktrees" >&2
+    exit 127
+  fi
+  # Fetch on first use; without this the fallback is fiction on a fresh machine.
+  if ! docker image inspect "$GITLEAKS_IMAGE" >/dev/null 2>&1; then
+    docker pull --quiet "$GITLEAKS_IMAGE" >/dev/null 2>&1 || true
+  fi
+  # The container sees only /repo. A --config pointing outside the worktree —
+  # the canonical ruleset under ~/.claude, which is what an un-adopted repo is
+  # always scanned with — is invisible in there, so gitleaks would die with
+  # "unable to load gitleaks config" and exit 1. Mount it and rewrite the path.
+  cfg_mount=()
+  docker_args=()
+  for arg in "$@"; do
+    case "$arg" in
+      --config=/*)
+        cfg_path="${arg#--config=}"
+        if [[ "$cfg_path" == "$root"/* ]]; then
+          docker_args+=("--config=${cfg_path#"$root"/}")   # already inside the mount
+        else
+          cfg_mount=(-v "$cfg_path:/repo-baseline-gitleaks.toml:ro")
+          docker_args+=("--config=/repo-baseline-gitleaks.toml")
+        fi
+        ;;
+      *) docker_args+=("$arg") ;;
+    esac
+  done
+
+  exec docker run --pull=never --rm \
+    -v "$root:/repo" "${cfg_mount[@]+"${cfg_mount[@]}"}" -w /repo \
+    "$GITLEAKS_IMAGE" "${docker_args[@]}"
+fi
+
+printf '%s\n' \
+  "repo-baseline: no gitleaks >= ${floor} on PATH and no Docker daemon is reachable" \
+  "  install it with:  bash machine-setup-*/scripts/11-gitleaks.sh" >&2
+exit 127

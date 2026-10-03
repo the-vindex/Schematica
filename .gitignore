@@ -19,3 +19,33 @@
 /*.iml
 /*.ipr
 /*.iws
+# repo-baseline:ignore-begin version=1
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+!.env.*.example
+service-account.env
+**/*credentials*
+**/auth.json
+**/.credentials.json
+id_rsa*
+id_ed25519*
+*.pem
+*.p12
+*.pfx
+*.key
+
+# Agent-local state
+/.claude/settings.local.json
+
+# Large local model artifacts
+*.gguf
+*.safetensors
+*.ckpt
+
+# Detected stacks: java
+.gradle/
+/build/
+/target/
+# repo-baseline:ignore-end
