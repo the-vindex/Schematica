@@ -1,3 +1,38 @@
+## Fork notes (the-vindex/Schematica)
+
+This is a fork of [Lunatrius/Schematica](https://github.com/Lunatrius/Schematica) (MIT, see `LICENSE`;
+`logo.png` stays under its own CC BY-ND licence, see `LICENSE-EXCLUSIONS`). It exists for the
+[minecraft-overseer](https://github.com/the-vindex/minecraft-overseer) project, which drives Schematica's
+preview and printer from an AI agent. Planned changes: a printer and material list that can use blocks
+stored inside a Dank/Null, and a printer that pauses when the player is hurt or hostiles are close.
+
+It stays a drop-in replacement: mod id `schematica`, version `1.8.0.169`, same network messages, so a
+client with this jar still joins servers running the original Schematica.
+
+### Building (Docker, original toolchain)
+
+Upstream's toolchain (Gradle 2.9 wrapper, ForgeGradle 2.3, Java 8, MCP `snapshot_20171010`) is kept
+unchanged and run in a container:
+
+    scripts/docker-build.sh      # -> build/libs/Schematica-1.12.2-1.8.0.169-universal.jar
+
+- `docker/Dockerfile`: `eclipse-temurin:8-jdk`. The Gradle cache lives in the named volume
+  `schematica-gradle` (cold build ~1.5 min, rebuild ~10 s); the build runs as the calling user and sets
+  `BUILD_NUMBER=169` so the version is `1.8.0.169`.
+- `scripts/fetch-libs.sh` installs LunatriusCore 1.2.0.42 from a local e36 instance
+  (`/mnt/minecraft-e36/mods`, override with `E36_MODS`) into the git-ignored `local-maven/`. It must not
+  live in `libs/`: ForgeGradle 2 puts every file under `libs/` on the compile classpath, and the
+  release (SRG-named) jar there shadows the deobfuscated one (`x has private access in Vec3i`).
+
+Build changes versus upstream (`build.gradle` only):
+- Forge maven URL `http://files.minecraftforge.net/maven` → `https://maven.minecraftforge.net/`.
+- Removed `jcenter()` (shut down) and the CurseGradle plugin plus the CurseForge upload block.
+- The `mc.lunatri.us` ivy repo (gone) is replaced by the local `local-maven/` repository.
+
+The built jar has the same 145 classes and resources as the official 1.8.0.169 release; it is not signed
+with Lunatrius' key (the official jar is, but Schematica declares no certificate fingerprint, so Forge
+does not check it).
+
 ## Welcome to Schematica!
 ### Compiling
 [Setup Java](#setup-java)

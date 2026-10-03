@@ -1,14 +1,13 @@
 buildscript {
     repositories {
         mavenCentral()
-        jcenter()
         maven {
             name = 'gradle plugins'
             url "https://plugins.gradle.org/m2/"
         }
         maven {
             name = 'forge'
-            url = 'http://files.minecraftforge.net/maven'
+            url = 'https://maven.minecraftforge.net/'
         }
         maven {
             name = 'sonatype'
@@ -17,12 +16,10 @@ buildscript {
     }
     dependencies {
         classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
-        classpath 'gradle.plugin.com.matthewprenger:CurseGradle:1.0.9'
     }
 }
 
 apply plugin: 'net.minecraftforge.gradle.forge'
-apply plugin: 'com.matthewprenger.cursegradle'
 
 ext.build = System.getenv().BUILD_NUMBER ?: 'git'
 ext.modversion = "${project.version_major}.${project.version_minor}.${project.version_micro}.${build}"
@@ -81,9 +78,10 @@ processResources {
 }
 
 repositories {
-    ivy {
-        name = 'lunatrius\' ivy repo'
-        url 'http://mc.lunatri.us/files'
+    // Fork: mc.lunatri.us is gone; LunatriusCore comes from the e36 jar via scripts/fetch-libs.sh (git-ignored).
+    maven {
+        name = 'local libs'
+        url = file('local-maven')
     }
 }
 
@@ -173,22 +171,4 @@ task release(dependsOn: 'signJars', type: Copy) {
     }
 }
 
-if (project.hasProperty('api_key_curseforge') && project.hasProperty('extra_curseforge_id')) {
-    tasks.curseforge.dependsOn signJars
-    curseforge {
-        apiKey = project.api_key_curseforge
-
-        project {
-            id = project.extra_curseforge_id
-            changelog = ''
-            releaseType = project.hasProperty('extra_curseforge_releasetype') ? project.extra_curseforge_releasetype : 'release'
-
-            addArtifact sourceJar
-            addArtifact apiJar
-
-            relations {
-                requiredLibrary 'lunatriuscore'
-            }
-        }
-    }
-}
+// Fork: CurseForge upload (CurseGradle plugin) removed; this fork is not published to CurseForge.

@@ -49,3 +49,6 @@ id_ed25519*
 /build/
 /target/
 # repo-baseline:ignore-end
+
+# Fork: local third-party jars (scripts/fetch-libs.sh)
+/local-maven/
