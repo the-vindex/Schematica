@@ -9,6 +9,19 @@ stored inside a Dank/Null, and a printer that pauses when the player is hurt or 
 It stays a drop-in replacement: mod id `schematica`, version `1.8.0.169`, same network messages, so a
 client with this jar still joins servers running the original Schematica.
 
+### Changes
+
+- **Dank/Null support (optional).** When no loose stack of a block exists, the printer brings a Dank/Null
+  holding it into an allowed swap slot, selects the stack with Dank/Null's own SELECTED packet and places
+  with a normal right-click. That click is unsneaked (sneak+use opens the Dank/Null GUI), so it never
+  targets a block with a tile entity. The material list counts Dank/Null contents (minus what the
+  placement mode keeps). Only `client/printer/source/DankNullSource` touches Dank/Null, instantiated
+  reflectively when the `danknull` mod is loaded; Dank/Null is a compile-only dependency.
+- **Safety pause.** While printing, the printer pauses when the player takes damage or a hostile mob is
+  within `hostileRadius` blocks, says so in chat (`[Schematica] printer paused: <reason>`), and resumes after
+  `resumeAfterTicks` quiet ticks. Toggling the printer clears a pause. Config (`printer` category):
+  `pauseOnDamage=true`, `hostileRadius=6` (0 = off), `resumeAfterTicks=60`.
+
 ### Building (Docker, original toolchain)
 
 Upstream's toolchain (Gradle 2.9 wrapper, ForgeGradle 2.3, Java 8, MCP `snapshot_20171010`) is kept

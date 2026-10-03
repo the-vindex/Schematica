@@ -59,6 +59,7 @@ public class SchematicPrinter {
     }
 
     public boolean togglePrinting() {
+        SafetyMonitor.INSTANCE.reset(); // Fork: toggling the printer clears a safety pause
         this.isPrinting = !this.isPrinting && this.schematic != null;
         return this.isPrinting;
     }
@@ -68,6 +69,7 @@ public class SchematicPrinter {
     }
 
     public void setPrinting(final boolean isPrinting) {
+        SafetyMonitor.INSTANCE.reset(); // Fork: toggling the printer clears a safety pause
         this.isPrinting = isPrinting;
     }
 

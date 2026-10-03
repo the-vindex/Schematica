@@ -41,6 +41,9 @@ public class ConfigurationHandler {
     public static final boolean DESTROY_BLOCKS_DEFAULT = false;
     public static final boolean DESTROY_INSTANTLY_DEFAULT = false;
     public static final boolean PLACE_ADJACENT_DEFAULT = true;
+    public static final boolean PAUSE_ON_DAMAGE_DEFAULT = true;
+    public static final int HOSTILE_RADIUS_DEFAULT = 6;
+    public static final int RESUME_AFTER_TICKS_DEFAULT = 60;
     public static final boolean[] SWAP_SLOTS_DEFAULT = new boolean[] {
             false, false, false, false, false, true, true, true, true
     };
@@ -65,6 +68,9 @@ public class ConfigurationHandler {
     public static int timeout = TIMEOUT_DEFAULT;
     public static int placeDistance = PLACE_DISTANCE_DEFAULT;
     public static boolean placeInstantly = PLACE_INSTANTLY_DEFAULT;
+    public static boolean pauseOnDamage = PAUSE_ON_DAMAGE_DEFAULT;
+    public static int hostileRadius = HOSTILE_RADIUS_DEFAULT;
+    public static int resumeAfterTicks = RESUME_AFTER_TICKS_DEFAULT;
     public static boolean destroyBlocks = DESTROY_BLOCKS_DEFAULT;
     public static boolean destroyInstantly = DESTROY_INSTANTLY_DEFAULT;
     public static boolean placeAdjacent = PLACE_ADJACENT_DEFAULT;
@@ -90,6 +96,9 @@ public class ConfigurationHandler {
     public static Property propTimeout = null;
     public static Property propPlaceDistance = null;
     public static Property propPlaceInstantly = null;
+    public static Property propPauseOnDamage = null;
+    public static Property propHostileRadius = null;
+    public static Property propResumeAfterTicks = null;
     public static Property propDestroyBlocks = null;
     public static Property propDestroyInstantly = null;
     public static Property propPlaceAdjacent = null;
@@ -191,6 +200,19 @@ public class ConfigurationHandler {
         propPlaceAdjacent = configuration.get(Names.Config.Category.PRINTER, Names.Config.PLACE_ADJACENT, PLACE_ADJACENT_DEFAULT, Names.Config.PLACE_ADJACENT_DESC);
         propPlaceAdjacent.setLanguageKey(Names.Config.LANG_PREFIX + "." + Names.Config.PLACE_ADJACENT);
         placeAdjacent = propPlaceAdjacent.getBoolean(PLACE_ADJACENT_DEFAULT);
+
+        // Fork: safety pause
+        propPauseOnDamage = configuration.get(Names.Config.Category.PRINTER, Names.Config.PAUSE_ON_DAMAGE, PAUSE_ON_DAMAGE_DEFAULT, Names.Config.PAUSE_ON_DAMAGE_DESC);
+        propPauseOnDamage.setLanguageKey(Names.Config.LANG_PREFIX + "." + Names.Config.PAUSE_ON_DAMAGE);
+        pauseOnDamage = propPauseOnDamage.getBoolean(PAUSE_ON_DAMAGE_DEFAULT);
+
+        propHostileRadius = configuration.get(Names.Config.Category.PRINTER, Names.Config.HOSTILE_RADIUS, HOSTILE_RADIUS_DEFAULT, Names.Config.HOSTILE_RADIUS_DESC, 0, 32);
+        propHostileRadius.setLanguageKey(Names.Config.LANG_PREFIX + "." + Names.Config.HOSTILE_RADIUS);
+        hostileRadius = propHostileRadius.getInt(HOSTILE_RADIUS_DEFAULT);
+
+        propResumeAfterTicks = configuration.get(Names.Config.Category.PRINTER, Names.Config.RESUME_AFTER_TICKS, RESUME_AFTER_TICKS_DEFAULT, Names.Config.RESUME_AFTER_TICKS_DESC, 1, 1200);
+        propResumeAfterTicks.setLanguageKey(Names.Config.LANG_PREFIX + "." + Names.Config.RESUME_AFTER_TICKS);
+        resumeAfterTicks = propResumeAfterTicks.getInt(RESUME_AFTER_TICKS_DEFAULT);
     }
 
     private static void loadConfigurationSwapSlots() {

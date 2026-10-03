@@ -44,6 +44,12 @@ public final class Names {
         public static final String DESTROY_INSTANTLY_DESC = "Destroy all blocks that can be destroyed in one tick.";
         public static final String PLACE_ADJACENT = "placeAdjacent";
         public static final String PLACE_ADJACENT_DESC = "Place blocks only if there is an adjacent block next to them.";
+        public static final String PAUSE_ON_DAMAGE = "pauseOnDamage";
+        public static final String PAUSE_ON_DAMAGE_DESC = "Pause the printer while the player is taking damage.";
+        public static final String HOSTILE_RADIUS = "hostileRadius";
+        public static final String HOSTILE_RADIUS_DESC = "Pause the printer while a hostile mob is within this many blocks (0 = never).";
+        public static final String RESUME_AFTER_TICKS = "resumeAfterTicks";
+        public static final String RESUME_AFTER_TICKS_DESC = "Resume a paused printer after this many ticks without danger.";
         public static final String SWAP_SLOT = "swapSlot";
         public static final String SWAP_SLOT_DESC = "Allow the printer to use this hotbar slot.";
 

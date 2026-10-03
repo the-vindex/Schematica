@@ -94,6 +94,12 @@ schematica.config.destroyInstantly=Destroy Instantly
 schematica.config.destroyInstantly.tooltip=Destroy all blocks that can be destroyed in one tick.
 schematica.config.placeAdjacent=Place Only Adjacent
 schematica.config.placeAdjacent.tooltip=Place blocks only if there is an adjacent block next to them.
+schematica.config.pauseOnDamage=Pause On Damage
+schematica.config.pauseOnDamage.tooltip=Pause the printer while the player is taking damage.
+schematica.config.hostileRadius=Hostile Radius
+schematica.config.hostileRadius.tooltip=Pause the printer while a hostile mob is within this many blocks (0 = never).
+schematica.config.resumeAfterTicks=Resume After Ticks
+schematica.config.resumeAfterTicks.tooltip=Resume a paused printer after this many ticks without danger.
 
 # gui - config - printer - swap slots
 schematica.config.swapSlot0=Allow Slot 1

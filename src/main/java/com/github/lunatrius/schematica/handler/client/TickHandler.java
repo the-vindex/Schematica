@@ -1,6 +1,7 @@
 package com.github.lunatrius.schematica.handler.client;
 
 import com.github.lunatrius.schematica.Schematica;
+import com.github.lunatrius.schematica.client.printer.SafetyMonitor;
 import com.github.lunatrius.schematica.client.printer.SchematicPrinter;
 import com.github.lunatrius.schematica.client.world.SchematicWorld;
 import com.github.lunatrius.schematica.handler.ConfigurationHandler;
@@ -49,7 +50,9 @@ public class TickHandler {
         if (world != null && player != null && schematic != null && schematic.isRendering) {
             this.minecraft.mcProfiler.startSection("printer");
             final SchematicPrinter printer = SchematicPrinter.INSTANCE;
-            if (printer.isEnabled() && printer.isPrinting() && this.ticks-- < 0) {
+            // Fork: the safety monitor ticks every tick while printing so its quiet count is in ticks.
+            final boolean paused = printer.isEnabled() && printer.isPrinting() && SafetyMonitor.INSTANCE.blocksPrinting(player, world);
+            if (!paused && printer.isEnabled() && printer.isPrinting() && this.ticks-- < 0) {
                 this.ticks = ConfigurationHandler.placeDelay;
 
                 printer.print(world, player);
