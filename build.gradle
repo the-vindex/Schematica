@@ -87,6 +87,10 @@ repositories {
 
 dependencies {
     deobfCompile group: group, name: 'LunatriusCore', version: "${project.version_minecraft}-${project.version_lunatriuscore}", classifier: 'universal'
+    // Fork: optional Dank/Null support. Compile-only; only DankNullSource touches these classes, and only when danknull is loaded.
+    deobfProvided 'local.mods:DankNull:1.12.2-1.7.91'
+    deobfProvided 'local.mods:p455w0rdslib:1.12.2-2.3.161'
+    testCompile 'junit:junit:4.12'
 }
 
 def commonManifest = {

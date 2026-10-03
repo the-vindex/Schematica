@@ -4,6 +4,7 @@ import com.github.lunatrius.core.entity.EntityHelper;
 import com.github.lunatrius.core.util.math.BlockPosHelper;
 import com.github.lunatrius.core.util.math.MBlockPos;
 import com.github.lunatrius.schematica.block.state.BlockStateHelper;
+import com.github.lunatrius.schematica.client.printer.source.ItemSources;
 import com.github.lunatrius.schematica.client.world.SchematicWorld;
 import com.github.lunatrius.schematica.reference.Reference;
 import net.minecraft.block.Block;
@@ -103,6 +104,8 @@ public class BlockList {
                 wrappedItemStack.inventory = -1;
             } else {
                 wrappedItemStack.inventory = EntityHelper.getItemCountInInventory(player.inventory, wrappedItemStack.itemStack.getItem(), wrappedItemStack.itemStack.getItemDamage());
+                // Fork: include blocks the printer can take from optional sources (Dank/Null).
+                wrappedItemStack.inventory += ItemSources.count(player, wrappedItemStack.itemStack);
             }
         }
 

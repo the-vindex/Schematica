@@ -7,6 +7,7 @@ import com.github.lunatrius.schematica.client.printer.nbtsync.NBTSync;
 import com.github.lunatrius.schematica.client.printer.nbtsync.SyncRegistry;
 import com.github.lunatrius.schematica.client.printer.registry.PlacementData;
 import com.github.lunatrius.schematica.client.printer.registry.PlacementRegistry;
+import com.github.lunatrius.schematica.client.printer.source.ItemSources;
 import com.github.lunatrius.schematica.client.util.BlockStateToItemStack;
 import com.github.lunatrius.schematica.client.world.SchematicWorld;
 import com.github.lunatrius.schematica.handler.ConfigurationHandler;
@@ -314,11 +315,23 @@ public class SchematicPrinter {
             extraClicks = 0;
         }
 
-        if (!swapToItem(player.inventory, itemStack)) {
-            return false;
+        if (swapToItem(player.inventory, itemStack)) {
+            return placeBlock(world, player, pos, direction, offsetX, offsetY, offsetZ, extraClicks);
         }
 
-        return placeBlock(world, player, pos, direction, offsetX, offsetY, offsetZ, extraClicks);
+        // Fork: no loose stack - fall back to optional sources such as a Dank/Null. A sneaking right-click with a
+        // Dank/Null opens its GUI instead of placing, so click unsneaked; then never click a block with a tile
+        // entity (an unsneaked click could open a chest or machine instead of placing against it).
+        final BlockPos clicked = ConfigurationHandler.placeAdjacent ? pos.offset(direction) : pos;
+        if (world.getTileEntity(clicked) != null || !ItemSources.prepare(player, itemStack, this::swapIntoHotbar)) {
+            return false;
+        }
+        syncSneaking(player, false);
+        try {
+            return placeBlock(world, player, pos, direction, offsetX, offsetY, offsetZ, extraClicks);
+        } finally {
+            syncSneaking(player, true);
+        }
     }
 
     private boolean placeBlock(final WorldClient world, final EntityPlayerSP player, final BlockPos pos, final EnumFacing direction, final float offsetX, final float offsetY, final float offsetZ, final int extraClicks) {
@@ -414,6 +427,16 @@ public class SchematicPrinter {
         }
 
         return false;
+    }
+
+    /** Moves an inventory slot into the next allowed swap slot; returns that hotbar slot, or -1 when none is allowed. */
+    private int swapIntoHotbar(final int from) {
+        if (ConfigurationHandler.swapSlotsQueue.size() == 0) {
+            return -1;
+        }
+        final int slot = getNextSlot();
+        swapSlots(from, slot);
+        return slot;
     }
 
     private int getNextSlot() {

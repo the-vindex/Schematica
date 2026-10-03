@@ -13,3 +13,6 @@ install() { # jar groupId artifactId version classifier
   echo "installed $2:$3:$4${5:+:$5}"
 }
 install LunatriusCore-1.12.2-1.2.0.42-universal.jar com.github.lunatrius LunatriusCore 1.12.2-1.2.0.42 universal
+# Compile-only for the optional Dank/Null support (never shipped; resolved at runtime only if installed).
+install DankNull-1.12.2-1.7.91.jar local.mods DankNull 1.12.2-1.7.91
+install p455w0rdslib-1.12.2-2.3.161.jar local.mods p455w0rdslib 1.12.2-2.3.161
