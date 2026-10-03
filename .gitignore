@@ -49,3 +49,7 @@ id_ed25519*
 /build/
 /target/
 # repo-baseline:ignore-end
+
+# Schematica fork: local third-party jars and dev run dir
+/libs/
+/run/
