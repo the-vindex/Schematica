@@ -22,20 +22,13 @@ client with this jar still joins servers running the original Schematica.
   `resumeAfterTicks` quiet ticks. Toggling the printer clears a pause. Config (`printer` category):
   `pauseOnDamage=true`, `hostileRadius=6` (0 = off), `resumeAfterTicks=60`.
 
-### Building (Docker, original toolchain)
+### Building
 
-Upstream's toolchain (Gradle 2.9 wrapper, ForgeGradle 2.3, Java 8, MCP `snapshot_20171010`) is kept
-unchanged and run in a container:
-
-    scripts/docker-build.sh      # -> build/libs/Schematica-1.12.2-1.8.0.169-universal.jar
-
-- `docker/Dockerfile`: `eclipse-temurin:8-jdk`. The Gradle cache lives in the named volume
-  `schematica-gradle` (cold build ~1.5 min, rebuild ~10 s); the build runs as the calling user and sets
-  `BUILD_NUMBER=169` so the version is `1.8.0.169`.
-- `scripts/fetch-libs.sh` installs LunatriusCore 1.2.0.42 from a local e36 instance
-  (`/mnt/minecraft-e36/mods`, override with `E36_MODS`) into the git-ignored `local-maven/`. It must not
-  live in `libs/`: ForgeGradle 2 puts every file under `libs/` on the compile classpath, and the
-  release (SRG-named) jar there shadows the deobfuscated one (`x has private access in Vec3i`).
+Build tooling, docs, in-game tests and deploy for this fork live in
+the private superproject `local-minecraft-mods-forks` (`~/projects/local-minecraft-mods-forks`) (`schematica/`: `scripts/build.sh schematica` runs the original toolchain —
+ForgeGradle 2.3, Java 8 — in Docker, and installs the pack's compile-only jars into `local-maven/`, which is git-ignored and
+must not be `libs/`: ForgeGradle 2 puts every file there on the compile classpath and a release jar would shadow the
+deobfuscated one).
 
 Build changes versus upstream (`build.gradle` only):
 - Forge maven URL `http://files.minecraftforge.net/maven` → `https://maven.minecraftforge.net/`.
